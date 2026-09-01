@@ -1,0 +1,21 @@
+:root {
+  color: #e5e7eb;
+  background: #030712;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input { font: inherit; }
+main { min-height: 100vh; padding: 2rem; display: grid; gap: 1.5rem; grid-template-columns: minmax(16rem, 24rem) minmax(20rem, 1fr); }
+.controls { padding: 1.5rem; border: 1px solid #374151; border-radius: 1rem; background: #111827; }
+h1 { margin-top: 0; font-size: 1.6rem; }
+label { display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0 1rem; }
+button { border: 1px solid #6b7280; border-radius: .55rem; padding: .7rem 1rem; background: #1f2937; color: inherit; cursor: pointer; }
+.canvas-shell { min-height: 28rem; border: 1px solid #374151; border-radius: 1rem; overflow: hidden; }
+.status { display: grid; gap: .5rem; margin-top: 1.5rem; }
+.status div { display: flex; justify-content: space-between; }
+.status dd { font-variant-numeric: tabular-nums; }
+.overlay { position: fixed; right: 3rem; bottom: 3rem; z-index: 10; background: #f97316; border-color: #fdba74; color: #111827; font-weight: 700; }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; padding: 1rem; } .canvas-shell { min-height: 22rem; } }

@@ -1,0 +1,21 @@
+{
+  "name": "vue-renderer-tunnel-playground",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tresjs/core": "^5.8.3",
+    "three": "^0.185.1",
+    "vue": "^3.5.42",
+    "vue-renderer-tunnel": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  }
+}
