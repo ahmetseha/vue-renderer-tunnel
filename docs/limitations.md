@@ -1,6 +1,6 @@
 # Compatibility and limitations
 
-Results below use Vue 3.5.42, `@tresjs/core` 5.8.3, Three 0.185.1, and Chromium through Playwright on 2026-09-01.
+Generic results below are verified against Vue 3.4.0 and 3.5.42. The real Tres baseline uses Vue 3.5.42, `@tresjs/core` 5.8.3, Three 0.185.1, and Chromium through Playwright on 2026-09-01.
 
 | Feature | Status |
 | --- | --- |
@@ -10,14 +10,14 @@ Results below use Vue 3.5.42, `@tresjs/core` 5.8.3, Three 0.185.1, and Chromium 
 | Tres → DOM | Supported; real DOM interaction E2E tested |
 | Multiple `In` | Supported; stable registration identity |
 | Explicit `order` | Supported; reactive moves do not remount entries |
-| Reactive props/state | Supported |
+| Reactive props/state | Supported; generic host props and actual Tres material/mesh mutation tested |
 | `v-if` registration | Supported; repeated cleanup tested |
 | Component lifecycle | Supported; mount/unmount counts tested |
 | Component and host refs | Supported in tested source-ref patterns; cleared on removal |
 | DOM events | Supported at a DOM destination |
 | Tres pointer events | Owned by Tres at a Tres destination; core does not intercept them |
 | Shared imported state | Supported by normal Vue reactivity |
-| Multiple `Out` | Intentionally unsupported; second concurrent `Out` warns and is empty |
+| Multiple `Out` | One active at a time; waiting outlets are promoted in mount order |
 | Destination-local provide | Supported and tested |
 | Destination app provide | Supported by normal destination parentage |
 | Source-only provide | Not bridged |
@@ -40,4 +40,4 @@ Source-local provide/inject is deliberately not recreated. Doing so would requir
 
 Renderer built-ins remain destination-specific. The package does not turn a DOM selector into a valid Three target, add DOM transition classes to a Three object, or make an unsupported renderer implement Teleport.
 
-Concurrent destinations are rejected rather than cloning a logical VNode tree. Supporting duplication would need explicit semantics for component state, template refs, events, lifecycle, and different app contexts.
+Concurrent rendering is rejected rather than cloning a logical VNode tree. Supporting duplication would need explicit semantics for component state, template refs, events, lifecycle, and different app contexts. Multiple outlets may stay mounted for failover: only the active one renders, and the oldest waiting outlet is promoted when it unmounts.

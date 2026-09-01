@@ -4,7 +4,12 @@ import { TresCanvas } from '@tresjs/core'
 import { Vector3 } from 'three'
 import OverlaySource from './OverlaySource.vue'
 import TunneledMesh from './TunneledMesh.vue'
-import { mountedMeshCount, overlayClicks } from './state'
+import {
+  actualMaterialColor,
+  actualRotationY,
+  mountedMeshCount,
+  overlayClicks,
+} from './state'
 import { HtmlTunnel, ThreeTunnel } from './tunnels'
 
 const showMesh = ref(true)
@@ -58,6 +63,18 @@ function toggleMesh(): void {
           <dt>Overlay clicks</dt>
           <dd data-testid="overlay-click-count">
             {{ overlayClicks }}
+          </dd>
+        </div>
+        <div>
+          <dt>Actual material color</dt>
+          <dd data-testid="actual-material-color">
+            {{ actualMaterialColor }}
+          </dd>
+        </div>
+        <div>
+          <dt>Actual rotation Y</dt>
+          <dd data-testid="actual-rotation-y">
+            {{ actualRotationY === null ? 'unmounted' : actualRotationY.toFixed(3) }}
           </dd>
         </div>
       </dl>

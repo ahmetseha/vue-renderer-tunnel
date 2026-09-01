@@ -60,11 +60,110 @@ describe('destination lifecycle', () => {
     await nextTick()
     expect(first.find('shared').exists()).toBe(true)
     expect(second.find('shared').exists()).toBe(false)
+    expect(warning).toHaveBeenCalledTimes(1)
     expect(warning).toHaveBeenCalledWith(expect.stringContaining('Only one'))
 
     source.unmount()
     first.unmount()
     second.unmount()
+    warning.mockRestore()
+  })
+
+  it('promotes the oldest waiting Out when the active Out unmounts', async () => {
+    const Tunnel = createTunnel()
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const source = mount(defineComponent(() => () => h(Tunnel.In, null, {
+      default: () => h('shared'),
+    })))
+    const first = mount(defineComponent(() => () => h(Tunnel.Out)))
+    const second = mount(defineComponent(() => () => h(Tunnel.Out)))
+
+    await nextTick()
+    first.unmount()
+    await nextTick()
+    expect(second.findAll('shared')).toHaveLength(1)
+
+    source.unmount()
+    second.unmount()
+    warning.mockRestore()
+  })
+
+  it('keeps the active Out unchanged when an inactive Out unmounts', async () => {
+    const Tunnel = createTunnel()
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const source = mount(defineComponent(() => () => h(Tunnel.In, null, {
+      default: () => h('shared'),
+    })))
+    const first = mount(defineComponent(() => () => h(Tunnel.Out)))
+    const second = mount(defineComponent(() => () => h(Tunnel.Out)))
+
+    await nextTick()
+    second.unmount()
+    await nextTick()
+    expect(first.findAll('shared')).toHaveLength(1)
+
+    source.unmount()
+    first.unmount()
+    warning.mockRestore()
+  })
+
+  it('replaces active destinations without duplicate mounted children', async () => {
+    const Tunnel = createTunnel()
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    let activeChildren = 0
+    let mounts = 0
+    let unmounts = 0
+    const Child = defineComponent(() => {
+      onMounted(() => {
+        activeChildren += 1
+        mounts += 1
+      })
+      onUnmounted(() => {
+        activeChildren -= 1
+        unmounts += 1
+      })
+      return () => h('shared-child')
+    })
+    const source = mount(defineComponent(() => () => h(Tunnel.In, null, {
+      default: () => h(Child),
+    })))
+    const first = mount(defineComponent(() => () => h(Tunnel.Out)))
+    const second = mount(defineComponent(() => () => h(Tunnel.Out)))
+    const third = mount(defineComponent(() => () => h(Tunnel.Out)))
+
+    await nextTick()
+    expect({ activeChildren, mounts, unmounts }).toEqual({
+      activeChildren: 1,
+      mounts: 1,
+      unmounts: 0,
+    })
+    first.unmount()
+    await nextTick()
+    expect({ activeChildren, mounts, unmounts }).toEqual({
+      activeChildren: 1,
+      mounts: 2,
+      unmounts: 1,
+    })
+    expect(second.findAll('shared-child')).toHaveLength(1)
+    expect(third.find('shared-child').exists()).toBe(false)
+
+    second.unmount()
+    await nextTick()
+    expect({ activeChildren, mounts, unmounts }).toEqual({
+      activeChildren: 1,
+      mounts: 3,
+      unmounts: 2,
+    })
+    expect(third.findAll('shared-child')).toHaveLength(1)
+
+    third.unmount()
+    await nextTick()
+    expect({ activeChildren, mounts, unmounts }).toEqual({
+      activeChildren: 0,
+      mounts: 3,
+      unmounts: 3,
+    })
+    source.unmount()
     warning.mockRestore()
   })
 })

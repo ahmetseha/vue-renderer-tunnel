@@ -4,6 +4,14 @@
   "description": "Route Vue content between different Vue renderer roots.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmetseha/vue-renderer-tunnel.git"
+  },
+  "homepage": "https://github.com/ahmetseha/vue-renderer-tunnel#readme",
+  "bugs": {
+    "url": "https://github.com/ahmetseha/vue-renderer-tunnel/issues"
+  },
   "keywords": [
     "vue",
     "custom-renderer",
@@ -44,9 +52,13 @@
     "test": "pnpm test:unit && pnpm test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
+    "test:compat:built": "node scripts/test-compat.mjs",
+    "test:compat": "pnpm build && pnpm test:compat:built",
     "consumer:check": "vue-tsc --noEmit -p tests/consumer/tsconfig.json && node tests/consumer/smoke.mjs",
-    "pack:check": "pnpm build && publint && npm_config_cache=/tmp/vue-renderer-tunnel-npm-cache attw --pack --profile esm-only && pnpm consumer:check && npm_config_cache=/tmp/vue-renderer-tunnel-npm-cache npm pack --dry-run",
-    "check": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build && pnpm pack:check && pnpm test:e2e"
+    "pack:validate": "publint && npm_config_cache=/tmp/vue-renderer-tunnel-npm-cache attw --pack --profile esm-only && pnpm consumer:check && npm_config_cache=/tmp/vue-renderer-tunnel-npm-cache npm pack --dry-run",
+    "pack:check": "pnpm build && pnpm pack:validate",
+    "check:fast": "pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build",
+    "check": "pnpm check:fast && pnpm test:compat:built && pnpm pack:validate && pnpm --dir playground build && pnpm test:e2e"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

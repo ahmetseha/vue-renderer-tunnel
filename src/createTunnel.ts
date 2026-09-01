@@ -7,7 +7,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import type { PropType, Slots, VNodeChild } from 'vue'
+import type { PropType, Ref, Slots, VNodeChild } from 'vue'
 import type { Tunnel, TunnelInComponent, TunnelOutComponent } from './types'
 
 interface TunnelEntry {
@@ -15,6 +15,12 @@ interface TunnelEntry {
   readonly sequence: number
   order: number
   readonly render: () => VNodeChild
+}
+
+interface TunnelOutRegistration {
+  readonly id: symbol
+  sequence: number
+  readonly active: Ref<boolean>
 }
 
 const EMPTY_SLOTS: VNodeChild = []
@@ -25,9 +31,10 @@ const EMPTY_SLOTS: VNodeChild = []
  */
 export function createTunnel(): Tunnel {
   const entries = new Map<symbol, TunnelEntry>()
+  const outlets = new Map<symbol, TunnelOutRegistration>()
   const revision = ref(0)
   let nextSequence = 0
-  let activeOut: symbol | undefined
+  let nextOutSequence = 0
 
   const invalidate = (): void => {
     revision.value += 1
@@ -79,27 +86,37 @@ export function createTunnel(): Tunnel {
     name: 'RendererTunnelOut',
     setup() {
       const id = Symbol('tunnel-out')
-      const isActive = ref(false)
+      const registration: TunnelOutRegistration = {
+        id,
+        sequence: Number.POSITIVE_INFINITY,
+        active: ref(false),
+      }
 
       onMounted(() => {
-        if (activeOut === undefined) {
-          activeOut = id
-          isActive.value = true
+        registration.sequence = nextOutSequence++
+        outlets.set(id, registration)
+        if (!findActiveOut()) {
+          registration.active.value = true
         }
         else {
           console.warn(
             '[vue-renderer-tunnel] Only one <Tunnel.Out> may be mounted per tunnel. '
-            + 'This Out will render nothing.',
+            + 'This Out will remain inactive until the active Out unmounts.',
           )
         }
       })
 
       onBeforeUnmount(() => {
-        if (activeOut === id) activeOut = undefined
+        const wasActive = registration.active.value
+        outlets.delete(id)
+        if (wasActive) {
+          registration.active.value = false
+          promoteOldestOut(outlets)
+        }
       })
 
       return () => {
-        if (!isActive.value) return null
+        if (!registration.active.value) return null
         void revision.value
 
         return Array.from(entries.values())
@@ -110,6 +127,10 @@ export function createTunnel(): Tunnel {
   }) as TunnelOutComponent
 
   return { In, Out }
+
+  function findActiveOut(): TunnelOutRegistration | undefined {
+    return Array.from(outlets.values()).find(outlet => outlet.active.value)
+  }
 }
 
 function renderSlotLazily(slots: Slots): VNodeChild {
@@ -118,4 +139,10 @@ function renderSlotLazily(slots: Slots): VNodeChild {
 
 function compareEntries(left: TunnelEntry, right: TunnelEntry): number {
   return left.order - right.order || left.sequence - right.sequence
+}
+
+function promoteOldestOut(outlets: Map<symbol, TunnelOutRegistration>): void {
+  const oldest = Array.from(outlets.values())
+    .sort((left, right) => left.sequence - right.sequence)[0]
+  if (oldest) oldest.active.value = true
 }

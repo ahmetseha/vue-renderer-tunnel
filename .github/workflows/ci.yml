@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Locate pnpm store
+        id: pnpm-cache
+        shell: bash
+        run: echo "store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:fast
+      - run: pnpm pack:validate
+      - run: pnpm --dir playground build
+
+  vue-compatibility:
+    name: Vue ${{ matrix.vue }} compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        vue:
+          - 3.4.0
+          - 3.5.42
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Locate pnpm store
+        id: pnpm-cache
+        shell: bash
+        run: echo "store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}-${{ matrix.vue }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}-
+            ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:compat -- ${{ matrix.vue }}
+
+  tres-e2e:
+    name: TresJS Chromium E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Locate pnpm store
+        id: pnpm-cache
+        shell: bash
+        run: echo "store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

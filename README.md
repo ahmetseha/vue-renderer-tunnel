@@ -1,5 +1,7 @@
 # vue-renderer-tunnel
 
+[![CI](https://github.com/ahmetseha/vue-renderer-tunnel/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmetseha/vue-renderer-tunnel/actions/workflows/ci.yml)
+
 Route lazy Vue content from one Vue renderer root to another. It is designed for renderer boundaries and tested with Vue DOM, a plain-object custom renderer, and TresJS.
 
 ```ts
@@ -15,7 +17,7 @@ export const HtmlTunnel = createTunnel()
 
 Vue Teleport moves content to a target understood by the **current** renderer. It cannot make Tres's Three renderer create DOM nodes, or make the DOM renderer create Three objects.
 
-TresJS `TresPortal` reparents Tres children to another `Object3D`/scene inside the Tres renderer. `enableProvideBridge` copies Vue provides across `TresCanvas`'s renderer root. Neither routes arbitrary lazy content between renderer roots; this package complements both.
+TresJS `TresPortal` and vue-renderer-tunnel solve different problems. `TresPortal` reparents declarative children to another `Object3D` or scene within the Tres renderer. This package routes lazy declarative content across distinct Vue renderer roots, such as Vue DOM and Tres. Tres's `enableProvideBridge` separately copies Vue provides across `TresCanvas`'s renderer root.
 
 ## Install
 
@@ -103,7 +105,7 @@ Every mounted `In` is a stable entry. Entries render by ascending `order`, then 
 
 `order` is reactive. Moving an entry preserves its keyed subtree and does not remount unrelated entries. Removing `In` automatically removes and unmounts its destination content.
 
-Only one `Out` may be active per tunnel. A second concurrent destination warns and renders nothing because duplicating one logical tree would make refs and lifecycle ambiguous.
+Only one `Out` may be active per tunnel. Additional destinations warn and wait because duplicating one logical tree would make refs and lifecycle ambiguous. If the active `Out` unmounts, the oldest waiting `Out` becomes active automatically.
 
 ## Reactivity, lifecycle, refs, and context
 
@@ -122,7 +124,7 @@ See [architecture](./docs/architecture.md), [research](./docs/research.md), and 
 
 ## Compatibility
 
-The v0.1 verification baseline is Vue 3.5.42, TresJS 5.8.3, Three 0.185.1, Vite 8.2.2, and Chromium. The published peer range is Vue `>=3.4 <4` because the implementation uses APIs available since Vue 3.4; the exact baseline is the strongest tested guarantee.
+The generic renderer core and built package are tested against exact Vue versions **3.4.0** and **3.5.42**, including both renderer directions, reactivity, ordering, and lifecycle cleanup. The current real TresJS integration baseline is Vue 3.5.42 + `@tresjs/core` 5.8.3 + Three 0.185.1 in Chromium. The tested peer range remains Vue `>=3.4 <4`.
 
 ## Development
 
@@ -137,7 +139,7 @@ Open `http://127.0.0.1:4173`. Run the full pipeline with:
 pnpm check
 ```
 
-Individual commands include `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build`, `pnpm pack:check`, and `pnpm test:e2e`.
+Individual commands include `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm test:compat`, `pnpm build`, `pnpm pack:check`, and `pnpm test:e2e`. Compatibility fixtures are created in the operating system's temporary directory and do not modify the workspace package or lockfile.
 
 ## Roadmap
 

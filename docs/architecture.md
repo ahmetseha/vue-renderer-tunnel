@@ -36,7 +36,7 @@ The component tree is determined where VNodes are patched: tunneled children are
 - imported refs/reactive stores remain ordinary shared JavaScript state;
 - refs carried by source-created VNodes are still assigned by Vue and are covered by regression tests, but two destinations would contend for the same logical ref.
 
-For that last reason a tunnel permits one active `Out`. A concurrent second `Out` warns and renders nothing. It should be remounted after the first is removed if it is intended to become the destination.
+For that last reason a tunnel permits one active `Out`. Other mounted outlets warn and remain inactive. The tunnel stores their small registrations in mount order; when the active destination unmounts, the oldest remaining outlet becomes active. Promotion happens after the outgoing destination begins unmounting, so the logical subtree is never rendered by two active outlets at once.
 
 ## Why this is not Teleport
 

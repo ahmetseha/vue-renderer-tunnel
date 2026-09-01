@@ -4,7 +4,7 @@ Research date: 2026-09-01.
 
 ## Versions and sources
 
-- Vue stable: **3.5.42**. The package supports `vue >=3.4 <4`; development and all tests use 3.5.42. Relevant public APIs: [custom renderer](https://vuejs.org/api/custom-renderer), [render functions](https://vuejs.org/guide/extras/render-function), and [built-in components](https://vuejs.org/api/built-in-components).
+- Vue stable: **3.5.42**. The primary development graph uses 3.5.42, and an isolated packed-package harness verifies the exact lower peer boundary **3.4.0** as well as 3.5.42. The package supports `vue >=3.4 <4`. Relevant public APIs: [custom renderer](https://vuejs.org/api/custom-renderer), [render functions](https://vuejs.org/guide/extras/render-function), and [built-in components](https://vuejs.org/api/built-in-components).
 - `@tresjs/core`: **5.8.3**, the current npm release when researched, with peers `vue >=3.4` and `three >=0.133`. The playground uses Three **0.185.1**. Sources inspected: [repository](https://github.com/Tresjs/tres), [TresCanvas docs](https://docs.tresjs.org/api/components/tres-canvas), published `dist/tres.js`/declarations, and current [`Context.vue`](https://github.com/Tresjs/tres/blob/main/packages/core/src/components/Context.vue).
 - Prior art: [`pmndrs/tunnel-rat`](https://github.com/pmndrs/tunnel-rat), its [52-line source](https://github.com/pmndrs/tunnel-rat/blob/main/src/index.tsx), README, license, and issue list.
 
@@ -14,7 +14,9 @@ Research date: 2026-09-01.
 
 `enableProvideBridge` defaults to `true`. Before mounting the Tres custom-renderer root, `Context.vue` walks the DOM-side ancestors above the canvas, copies their `provides`, and calls `provide()` for each value in the internal Tres root. It bridges provide/inject context; it does not register arbitrary content elsewhere or create an `In`/`Out` route. The tunnel neither replaces nor modifies this bridge.
 
-The current TresPortal documentation describes a thin wrapper over Vue Teleport which reparents already-declarative Tres children into an `Object3D` or `Scene`. It changes a target within the **same Tres renderer** and does not render the target scene itself or replace the injected Tres scene. This is different from moving an unevaluated slot from the DOM renderer into Tres, or from Tres back into DOM. One release-state discrepancy was found: the version-labelled 5.8.3 docs describe `TresPortal`, but the installed 5.8.3 npm package does not export a `TresPortal` symbol and issue #789 remains open. This package does not depend on that discrepancy: even the documented/current-main portal solves same-renderer scene-graph reparenting, not renderer crossing.
+The current TresPortal documentation describes a thin wrapper over Vue Teleport which reparents already-declarative Tres children into an `Object3D` or `Scene`. It changes a target within the **same Tres renderer** and does not render the target scene itself or replace the injected Tres scene. This is different from moving an unevaluated slot from the DOM renderer into Tres, or from Tres back into DOM.
+
+The release state needs precise date context. The research baseline, published `@tresjs/core` **5.8.3**, did not expose a `TresPortal` symbol. [PR #1445](https://github.com/Tresjs/tres/pull/1445), “MeshPortalMaterial (MVP) + TresPortal,” was merged into Tres main on 2026-06-30 after that release baseline, and current docs/main contain the newer portal work. Published npm 5.8.3 and current main are therefore not identical. This temporary discrepancy is not the package's rationale: `TresPortal` is intra-renderer scene-graph reparenting, while this package performs generic cross-renderer routing.
 
 Issue state checked on 2026-09-01:
 
@@ -59,8 +61,10 @@ Direct npm registry checks returned `E404 Not Found` for both:
 
 `vue-renderer-tunnel` is more precise and was selected. Registry availability is not a reservation and must be rechecked immediately before publishing.
 
+The `vue-renderer-tunnel` lookup was repeated during the 2026-09-01 pre-publish hardening pass and still returned `E404 Not Found`. No publication or reservation was attempted.
+
 ## Risks and conclusion
 
-The main compatibility risk is Vue's cross-root slot/VNode behavior even though only public APIs are used. Regression tests therefore exercise DOM → object renderer, object renderer → DOM, current Tres in Chromium, refs, component lifecycle, provide/inject, ordering, and built-ins. A single tunnel intentionally rejects concurrent `Out` instances because duplicated VNodes create ambiguous refs and lifecycle.
+The main compatibility risk is Vue's cross-root slot/VNode behavior even though only public APIs are used. Regression tests therefore exercise DOM → object renderer, object renderer → DOM, current Tres in Chromium, refs, component lifecycle, provide/inject, ordering, and built-ins. An isolated packed-package harness runs the generic contract against Vue 3.4.0 and 3.5.42. A single tunnel intentionally renders through only one `Out` at a time because duplicated VNodes create ambiguous refs and lifecycle; waiting outlets are promoted deterministically.
 
 **Go.** Modern Tres solves custom-renderer mounting, context bridging, and same-renderer scene reparenting, but it does not provide a generic bidirectional renderer tunnel. The remaining gap is coherent, useful outside Three.js, and implementable without private APIs.
