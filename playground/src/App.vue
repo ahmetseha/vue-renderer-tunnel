@@ -16,7 +16,7 @@ const showMesh = ref(true)
 const color = ref('#f97316')
 const canvasReady = ref(false)
 const rotationY = computed(() => overlayClicks.value * 0.25)
-const cameraPosition = new Vector3(3, 3, 4)
+const cameraPosition = new Vector3(0, 0, 5)
 const lightPosition = new Vector3(2, 3, 2)
 
 function toggleMesh(): void {
