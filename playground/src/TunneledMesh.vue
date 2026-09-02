@@ -41,10 +41,10 @@ onUnmounted(() => {
 <template>
   <TresMesh
     ref="meshRef"
-    name="tunneled-box"
+    name="tunneled-shape"
     :rotation-y="rotationY"
   >
-    <TresBoxGeometry :args="[1.4, 1.4, 1.4]" />
+    <TresTorusKnotGeometry :args="[0.85, 0.28, 128, 24]" />
     <TresMeshStandardMaterial
       ref="materialRef"
       :color="color"
