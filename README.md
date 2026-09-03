@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/ahmetseha/vue-renderer-tunnel/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmetseha/vue-renderer-tunnel/actions/workflows/ci.yml)
 
+**[Live demo →](https://seha.studio/lab/renderer-tunnel)**
+
 Route lazy Vue content from one Vue renderer root to another. It is designed for renderer boundaries and tested with Vue DOM, a plain-object custom renderer, and TresJS.
 
 ```ts

@@ -1,6 +1,6 @@
 {
   "name": "vue-renderer-tunnel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Route Vue content between different Vue renderer roots.",
   "type": "module",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/ahmetseha/vue-renderer-tunnel.git"
   },
-  "homepage": "https://github.com/ahmetseha/vue-renderer-tunnel#readme",
+  "homepage": "https://seha.studio/lab/renderer-tunnel",
   "bugs": {
     "url": "https://github.com/ahmetseha/vue-renderer-tunnel/issues"
   },
